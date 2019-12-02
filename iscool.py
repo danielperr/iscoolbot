@@ -26,6 +26,7 @@ classes = dict()
 
 
 def getsoup(classnum=0):  # !!! DONT USE UNLESS LOCAL FILES ARE MISSING (use opensoup() instead) !!!
+    """Fetch a class page and soupify it (makes http requests)"""
     r = requests.post('http://deshalit.iscool.co.il/default.aspx',
                       data={'__EVENTTARGET': 'dnn$ctr11396$TimeTableView$btnChangesTable',
                             '__VIEWSTATE': post_viewstate,
@@ -34,13 +35,15 @@ def getsoup(classnum=0):  # !!! DONT USE UNLESS LOCAL FILES ARE MISSING (use ope
 
 
 def opensoup(classnum, folder=pages_folder):
+    """Open a saved file and soupify it"""
     if not (folder.endswith('/') or folder.endswith('\\')):
         folder += '/'
     with open(folder + str(classnum) + '.html') as f:
         return BeautifulSoup(f.read())
 
 
-def update_pages(folder=pages_folder):
+def fetch_pages(folder=pages_folder):
+    """Fetch all the pages and store them in a folder as html files"""
     if not (folder.endswith('/') or folder.endswith('\\')):
         folder += '/'
     _classes = classes
@@ -52,11 +55,13 @@ def update_pages(folder=pages_folder):
 
 
 def extract_classes(soup):
+    """Extract ids and names of classes from a given soup"""
     select = soup.find('select', id='dnn_ctr11396_TimeTableView_ClassesList')
     return {option['value']: option.text for option in select.findChildren('option')}
 
 
 def extract(soup):
+    """Extract timetable data from a given soup"""
     table = soup.find('div', id='dnn_ctr11396_TimeTableView_PlaceHolder').find('table')
     rows = table.findChildren('tr', recursive=False)
     return [[col.findAll('div', {'class': 'TTLesson'}) for col in row.findChildren('td', recursive=False)[1:]]
@@ -64,7 +69,8 @@ def extract(soup):
 
 
 def find(data, teacher):
-    """:returns: [('hour', 'info')]"""
+    """Find a keyword in timetable data
+    :returns: [('period', 'info')]"""
     result = []
     for rownum, row in enumerate(data):
         for colnum, col in enumerate(row):
@@ -73,5 +79,6 @@ def find(data, teacher):
     return result
 
 
-classes = extract_classes(getsoup())
-update_pages()
+if if __name__ == "__main__":
+    classes = extract_classes(getsoup())
+    update_pages()
