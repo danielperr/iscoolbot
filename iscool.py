@@ -1,8 +1,27 @@
 # -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
 import requests
+import pickle
 
-pages_folder = 'pages/'
+
+class Lesson(object):
+
+    def __init__(self, name, teacher, classroom, day, period):
+        """
+        :param name: subject name
+        :param teacher: teacher
+        :param classroom: classroom location / id
+        :param day: day of the week (1=Sunday)
+        :param period: period number
+        """
+        self.name = name
+        self.teacher = teacher
+        self.classroom = classroom
+        self.day = day
+        self.period = period
+
+
+cachefile = 'cache'
 post_viewstate = '/wEPDwUIMjU3MTQzOTcPZBYGZg8WAh4EVGV4dAU+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBU \
                   cmFuc2l0aW9uYWwvL0VOIj5kAgEPZBYMAgEPFgIeB1Zpc2libGVoZAICDxYCHgdjb250ZW50BSLXk9eUINep15zXmdeYINeX15gi \
                   16Ig16jXl9eV15HXldeqZAIDDxYCHwIFIteT15Qg16nXnNeZ15gg15fXmCLXoiDXqNeX15XXkdeV16pkAgQPFgIfAgUg15vXnCDX \
@@ -25,13 +44,16 @@ post_viewstate = '/wEPDwUIMjU3MTQzOTcPZBYGZg8WAh4EVGV4dAU+PCFET0NUWVBFIEhUTUwgUF
 classes = dict()
 
 
-def getsoup(classnum=0):  # !!! DONT USE UNLESS LOCAL FILES ARE MISSING (use opensoup() instead) !!!
+def fetch_page(classnum=0):  # ! This will generate web requests
     """Fetch a class page and soupify it (makes http requests)"""
     r = requests.post('http://deshalit.iscool.co.il/default.aspx',
                       data={'__EVENTTARGET': 'dnn$ctr11396$TimeTableView$btnChangesTable',
                             '__VIEWSTATE': post_viewstate,
                             'dnn$ctr11396$TimeTableView$ClassesList': str(classnum)})
-    return BeautifulSoup(r.text, 'html.parser')
+    return r.text
+
+def write2cache(file=cachefile):  # ! This will generate web requests
+    pass
 
 
 def opensoup(classnum, folder=pages_folder):
@@ -39,7 +61,7 @@ def opensoup(classnum, folder=pages_folder):
     if not (folder.endswith('/') or folder.endswith('\\')):
         folder += '/'
     with open(folder + str(classnum) + '.html') as f:
-        return BeautifulSoup(f.read())
+        return BeautifulSoup(f.read(), 'html.parser')
 
 
 def fetch_pages(folder=pages_folder):
@@ -79,6 +101,12 @@ def find(data, teacher):
     return result
 
 
-if if __name__ == "__main__":
+if __name__ == "__main__":
     classes = extract_classes(getsoup())
-    update_pages()
+    searchterm = input('Search for > ')
+    if not searchterm:
+        exit()
+    info = list()
+    for classnum in classes:
+        info += find(extract(opensoup(classnum)), searchterm)
+    print(info)
